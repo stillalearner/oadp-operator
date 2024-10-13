@@ -31,10 +31,6 @@ func (r *DPAReconciler) ValidateBackupStorageLocations(dpa oadpv1alpha1.DataProt
 			return false, err
 		}
 
-		if err := r.ensureSecretDataExists(&dpa, &bslSpec); err != nil {
-			return false, err
-		}
-
 		if bslSpec.Velero != nil {
 			if bslSpec.Velero.Default {
 				numDefaultLocations++
@@ -64,16 +60,16 @@ func (r *DPAReconciler) ValidateBackupStorageLocations(dpa oadpv1alpha1.DataProt
 					return false, err
 				}
 			default:
-				return false, fmt.Errorf("invalid provider")
+				return false, fmt.Errorf("invalid provider specified for one of the backupstoragelocations configured")
 			}
 		}
 		if bslSpec.CloudStorage != nil {
 			// Make sure credentials are specified.
 			if bslSpec.CloudStorage.Credential == nil {
-				return false, fmt.Errorf("must provide a valid credential secret")
+				return false, fmt.Errorf("must provide a valid credential secret for cloud storage")
 			}
 			if bslSpec.CloudStorage.Credential.LocalObjectReference.Name == "" {
-				return false, fmt.Errorf("must provide a valid credential secret name")
+				return false, fmt.Errorf("must provide a valid credential secret name for cloud storage")
 			}
 			if bslSpec.CloudStorage.Default {
 				numDefaultLocations++
@@ -83,6 +79,10 @@ func (r *DPAReconciler) ValidateBackupStorageLocations(dpa oadpv1alpha1.DataProt
 		}
 		if bslSpec.CloudStorage != nil && bslSpec.Velero != nil {
 			return false, fmt.Errorf("must choose one of bucket or velero")
+		}
+
+		if err := r.ensureSecretDataExists(&dpa, &bslSpec); err != nil {
+			return false, err
 		}
 	}
 	if numDefaultLocations > 1 {

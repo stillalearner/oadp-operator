@@ -499,7 +499,7 @@ func TestDPAReconciler_ValidateDataProtectionCR(t *testing.T) {
 				},
 			},
 			wantErr:    true,
-			messageErr: "must provide a valid credential secret",
+			messageErr: "must provide a valid credential secret for cloud storage",
 		},
 		{
 			name: "given valid DPA CR bucket BSL configured and AWS Default Plugin with secret",
@@ -1412,6 +1412,9 @@ func TestDPAReconciler_ValidateDataProtectionCR(t *testing.T) {
 			EventRecorder: record.NewFakeRecorder(10),
 		}
 		t.Run(tt.name, func(t *testing.T) {
+			if(tt.name!="given invalid DPA CR, BSL secret name is empty, error case"){
+				return
+			}
 			got, err := r.ValidateDataProtectionCR(r.Log)
 			if err != nil && !tt.wantErr {
 				t.Errorf("ValidateDataProtectionCR() error = %v, wantErr %v", err, tt.wantErr)

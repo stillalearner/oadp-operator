@@ -61,6 +61,7 @@ func TestDPAReconciler_ValidateBackupStorageLocations(t *testing.T) {
 		secret  *corev1.Secret
 		want    bool
 		wantErr bool
+		errMsg  string
 	}{
 		{
 			name: "test no BSLs, no NoDefaultBackupLocation",
@@ -78,6 +79,7 @@ func TestDPAReconciler_ValidateBackupStorageLocations(t *testing.T) {
 			},
 			want:    false,
 			wantErr: true,
+			errMsg:  "no default backupstoragelocations configured, ensure that one backupstoragelocation has been configured as the default location",
 			secret: &corev1.Secret{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "cloud-credentials",
@@ -110,7 +112,7 @@ func TestDPAReconciler_ValidateBackupStorageLocations(t *testing.T) {
 			},
 		},
 		{
-			name: "test BSLs specified",
+			name: "test BSLs specified, no object storage configuration",
 			dpa: &oadpv1alpha1.DataProtectionApplication{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "foo",
@@ -134,6 +136,7 @@ func TestDPAReconciler_ValidateBackupStorageLocations(t *testing.T) {
 			},
 			want:    false,
 			wantErr: true,
+			errMsg:  "object storage configuration for AWS backupstoragelocation cannot be nil",
 			secret: &corev1.Secret{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "cloud-credentials",
@@ -166,6 +169,7 @@ func TestDPAReconciler_ValidateBackupStorageLocations(t *testing.T) {
 			},
 			want:    false,
 			wantErr: true,
+			errMsg:  "invalid provider specified for one of the backupstoragelocations configured",
 			secret: &corev1.Secret{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "cloud-credentials",
@@ -197,6 +201,7 @@ func TestDPAReconciler_ValidateBackupStorageLocations(t *testing.T) {
 			},
 			want:    false,
 			wantErr: true,
+			errMsg:  "no provider specified for one of the backupstoragelocations configured",
 			secret: &corev1.Secret{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "cloud-credentials",
@@ -206,7 +211,7 @@ func TestDPAReconciler_ValidateBackupStorageLocations(t *testing.T) {
 			},
 		},
 		{
-			name: "test BSLs specified, aws configured appropriately but no aws credentials are incorrect",
+			name: "test BSLs specified, aws configured appropriately but aws credentials are incorrect",
 			dpa: &oadpv1alpha1.DataProtectionApplication{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "foo",
@@ -235,6 +240,7 @@ func TestDPAReconciler_ValidateBackupStorageLocations(t *testing.T) {
 			},
 			want:    false,
 			wantErr: true,
+			errMsg:  "secrets \"aws-creds\" not found",
 			secret: &corev1.Secret{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "cloud-credentials",
@@ -272,6 +278,7 @@ func TestDPAReconciler_ValidateBackupStorageLocations(t *testing.T) {
 			},
 			want:    false,
 			wantErr: true,
+			errMsg:  "object storage configuration for AWS backupstoragelocation cannot be nil",
 			secret: &corev1.Secret{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "cloud-credentials",
@@ -296,6 +303,7 @@ func TestDPAReconciler_ValidateBackupStorageLocations(t *testing.T) {
 								Provider: "aws",
 								StorageType: velerov1.StorageType{
 									ObjectStorage: &velerov1.ObjectStorageLocation{
+										Prefix: "velero",
 										Bucket: "",
 									},
 								},
@@ -314,6 +322,7 @@ func TestDPAReconciler_ValidateBackupStorageLocations(t *testing.T) {
 			},
 			want:    false,
 			wantErr: true,
+			errMsg:  "bucket name for AWS backupstoragelocation cannot be empty",
 			secret: &corev1.Secret{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "cloud-credentials",
@@ -356,6 +365,7 @@ func TestDPAReconciler_ValidateBackupStorageLocations(t *testing.T) {
 			},
 			want:    false,
 			wantErr: true,
+			errMsg:  "BackupLocation must have velero prefix when backupImages is not set to false",
 			secret: &corev1.Secret{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "cloud-credentials",
@@ -399,6 +409,7 @@ func TestDPAReconciler_ValidateBackupStorageLocations(t *testing.T) {
 			},
 			want:    false,
 			wantErr: true,
+			errMsg:  "BackupLocation must have velero prefix when backupImages is not set to false",
 			secret: &corev1.Secret{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "cloud-credentials",
@@ -445,6 +456,7 @@ func TestDPAReconciler_ValidateBackupStorageLocations(t *testing.T) {
 			},
 			want:    true,
 			wantErr: false,
+			errMsg:  "",
 			secret: &corev1.Secret{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "cloud-credentials",
@@ -471,6 +483,7 @@ func TestDPAReconciler_ValidateBackupStorageLocations(t *testing.T) {
 								StorageType: velerov1.StorageType{
 									ObjectStorage: &velerov1.ObjectStorageLocation{
 										Bucket: "test-azure-bucket",
+										Prefix: "velero",
 									},
 								},
 								Config: map[string]string{
@@ -488,6 +501,7 @@ func TestDPAReconciler_ValidateBackupStorageLocations(t *testing.T) {
 			},
 			want:    false,
 			wantErr: true,
+			errMsg:  "resourceGroup for Azure backupstoragelocation config cannot be empty",
 			secret: &corev1.Secret{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "cloud-credentials",
@@ -513,6 +527,7 @@ func TestDPAReconciler_ValidateBackupStorageLocations(t *testing.T) {
 								StorageType: velerov1.StorageType{
 									ObjectStorage: &velerov1.ObjectStorageLocation{
 										Bucket: "test-azure-bucket",
+										Prefix: "velero",
 									},
 								},
 								Config: map[string]string{
@@ -531,6 +546,7 @@ func TestDPAReconciler_ValidateBackupStorageLocations(t *testing.T) {
 			},
 			want:    false,
 			wantErr: true,
+			errMsg:  "storageAccount for Azure backupstoragelocation config cannot be empty",
 			secret: &corev1.Secret{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "cloud-credentials",
@@ -546,12 +562,17 @@ func TestDPAReconciler_ValidateBackupStorageLocations(t *testing.T) {
 					Namespace: "test-ns",
 				},
 				Spec: oadpv1alpha1.DataProtectionApplicationSpec{
+					Configuration: &oadpv1alpha1.ApplicationConfig{
+						Velero: &oadpv1alpha1.VeleroConfig{},
+					},
 					BackupLocations: []oadpv1alpha1.BackupLocation{
 						{
 							Velero: &velerov1.BackupStorageLocationSpec{
 								Provider: "gcp",
 								StorageType: velerov1.StorageType{
-									ObjectStorage: &velerov1.ObjectStorageLocation{},
+									ObjectStorage: &velerov1.ObjectStorageLocation{
+										Prefix: "velero",
+									},
 								},
 								Credential: &corev1.SecretKeySelector{
 									LocalObjectReference: corev1.LocalObjectReference{
@@ -565,6 +586,7 @@ func TestDPAReconciler_ValidateBackupStorageLocations(t *testing.T) {
 			},
 			want:    false,
 			wantErr: true,
+			errMsg:  "bucket name for GCP backupstoragelocation cannot be empty",
 			secret: &corev1.Secret{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "cloud-credentials",
@@ -610,6 +632,7 @@ func TestDPAReconciler_ValidateBackupStorageLocations(t *testing.T) {
 			},
 			want:    true,
 			wantErr: false,
+			errMsg:  "",
 			secret: &corev1.Secret{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "cloud-credentials",
@@ -646,6 +669,7 @@ func TestDPAReconciler_ValidateBackupStorageLocations(t *testing.T) {
 									LocalObjectReference: corev1.LocalObjectReference{
 										Name: "cloud-credentials",
 									},
+									Key: "cloud",
 								},
 								Default: false,
 							},
@@ -655,11 +679,13 @@ func TestDPAReconciler_ValidateBackupStorageLocations(t *testing.T) {
 			},
 			want:    false,
 			wantErr: true,
+			errMsg:  "no default backupstoragelocations configured, ensure that one backupstoragelocation has been configured as the default location",
 			secret: &corev1.Secret{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "cloud-credentials",
 					Namespace: "test-ns",
 				},
+				Data: map[string][]byte{"cloud": []byte("dummy_data")},
 			},
 		},
 		{
@@ -697,6 +723,7 @@ func TestDPAReconciler_ValidateBackupStorageLocations(t *testing.T) {
 			},
 			want:    false,
 			wantErr: true,
+			errMsg:  "BackupLocation must have velero prefix when backupImages is not set to false",
 			secret: &corev1.Secret{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "cloud-credentials",
@@ -736,6 +763,7 @@ func TestDPAReconciler_ValidateBackupStorageLocations(t *testing.T) {
 			},
 			want:    false,
 			wantErr: true,
+			errMsg:  "BackupLocation must have velero prefix when backupImages is not set to false",
 			secret: &corev1.Secret{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "cloud-credentials",
@@ -779,6 +807,7 @@ func TestDPAReconciler_ValidateBackupStorageLocations(t *testing.T) {
 			},
 			want:    false,
 			wantErr: true,
+			errMsg:  "BackupLocation must have velero prefix when backupImages is not set to false",
 			secret: &corev1.Secret{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "cloud-credentials",
@@ -871,7 +900,7 @@ func TestDPAReconciler_ValidateBackupStorageLocations(t *testing.T) {
 			},
 		},
 		{
-			name: "test get error",
+			name: "test no BSL configured",
 			dpa: &oadpv1alpha1.DataProtectionApplication{
 				Spec: oadpv1alpha1.DataProtectionApplicationSpec{
 					Configuration: &oadpv1alpha1.ApplicationConfig{
@@ -882,6 +911,7 @@ func TestDPAReconciler_ValidateBackupStorageLocations(t *testing.T) {
 			},
 			want:    false,
 			wantErr: true,
+			errMsg:  "no default backupstoragelocations configured, ensure that one backupstoragelocation has been configured as the default location",
 			secret: &corev1.Secret{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "cloud-credentials",
@@ -932,6 +962,7 @@ func TestDPAReconciler_ValidateBackupStorageLocations(t *testing.T) {
 			},
 			want:    false,
 			wantErr: true,
+			errMsg:  "cannot have both backupstoragelocations and bucket provided for a single StorageLocation",
 			secret: &corev1.Secret{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "cloud-credentials",
@@ -962,6 +993,7 @@ func TestDPAReconciler_ValidateBackupStorageLocations(t *testing.T) {
 			},
 			want:    false,
 			wantErr: true,
+			errMsg:  "BackupLocation must have cloud storage prefix when backupImages is not set to false",
 			secret: &corev1.Secret{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "cloud-credentials",
@@ -983,6 +1015,7 @@ func TestDPAReconciler_ValidateBackupStorageLocations(t *testing.T) {
 								CloudStorageRef: corev1.LocalObjectReference{
 									Name: "testing",
 								},
+								Prefix:           "prefix",
 								Config:           map[string]string{},
 								Credential:       nil,
 								Default:          false,
@@ -994,6 +1027,7 @@ func TestDPAReconciler_ValidateBackupStorageLocations(t *testing.T) {
 			},
 			want:    false,
 			wantErr: true,
+			errMsg:  "must provide a valid credential secret for cloud storage",
 			secret: &corev1.Secret{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "cloud-credentials",
@@ -1015,6 +1049,7 @@ func TestDPAReconciler_ValidateBackupStorageLocations(t *testing.T) {
 								CloudStorageRef: corev1.LocalObjectReference{
 									Name: "testing",
 								},
+								Prefix:           "prefix",
 								Config:           map[string]string{},
 								Credential:       &corev1.SecretKeySelector{},
 								Default:          false,
@@ -1026,6 +1061,7 @@ func TestDPAReconciler_ValidateBackupStorageLocations(t *testing.T) {
 			},
 			want:    false,
 			wantErr: true,
+			errMsg:  "must provide a valid credential secret name for cloud storage",
 			secret: &corev1.Secret{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "cloud-credentials",
@@ -1134,7 +1170,7 @@ func TestDPAReconciler_ValidateBackupStorageLocations(t *testing.T) {
 			},
 		},
 		{
-			name: "BSL Region not set for aws provider without S3ForcePathStyle expect to fail",
+			name: "BSL Region not set for aws provider without S3ForcePathStyle expect to pass (auto-discovery)",
 			dpa: &oadpv1alpha1.DataProtectionApplication{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "foo",
@@ -1154,23 +1190,29 @@ func TestDPAReconciler_ValidateBackupStorageLocations(t *testing.T) {
 										Prefix: "test-prefix",
 									},
 								},
+								Config: map[string]string{
+									Profile: "default",
+								},
 								Credential: &corev1.SecretKeySelector{
 									LocalObjectReference: corev1.LocalObjectReference{
 										Name: "cloud-credentials",
 									},
+									Key: "cloud",
 								},
+								Default: true,
 							},
 						},
 					},
 				},
 			},
-			want:    false,
-			wantErr: true,
+			want:    true,
+			wantErr: false,
 			secret: &corev1.Secret{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "cloud-credentials",
 					Namespace: "test-ns",
 				},
+				Data: map[string][]byte{"cloud": []byte("dummy_data")},
 			},
 		},
 		{
@@ -1243,9 +1285,11 @@ func TestDPAReconciler_ValidateBackupStorageLocations(t *testing.T) {
 					Name:      "cloud-credentials",
 					Namespace: "test-ns",
 				},
+				Data: map[string][]byte{"cloud": []byte("dummy_data")},
 			},
-			want:    false,
-			wantErr: true,
+			want:    true,
+			wantErr: false,
+			errMsg:  "",
 		},
 		{
 			name: "BSL with config section having only profile and s3ForcePathStyle is true for aws provider and default backup images is true behavior",
@@ -1286,45 +1330,7 @@ func TestDPAReconciler_ValidateBackupStorageLocations(t *testing.T) {
 			},
 			want:    false,
 			wantErr: true,
-		},
-		{
-			name: "BSL with config section having only profile and default backup images is true behavior",
-			dpa: &oadpv1alpha1.DataProtectionApplication{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "foo",
-					Namespace: "test-ns",
-				},
-				Spec: oadpv1alpha1.DataProtectionApplicationSpec{
-					Configuration: &oadpv1alpha1.ApplicationConfig{
-						Velero: &oadpv1alpha1.VeleroConfig{},
-					},
-					BackupLocations: []oadpv1alpha1.BackupLocation{
-						{
-							Velero: &velerov1.BackupStorageLocationSpec{
-								Provider: "aws",
-								Config: map[string]string{
-									Profile: "default",
-								},
-								StorageType: velerov1.StorageType{
-									ObjectStorage: &velerov1.ObjectStorageLocation{
-										Bucket: "bucket",
-										Prefix: "prefix",
-									},
-								},
-								Default: true,
-							},
-						},
-					},
-				},
-			},
-			secret: &corev1.Secret{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "cloud-credentials",
-					Namespace: "test-ns",
-				},
-			},
-			want:    false,
-			wantErr: true,
+			errMsg:  "region for AWS backupstoragelocation not automatically discoverable. Please set the region in the backupstoragelocation config",
 		},
 		{
 			name: "BSL with no region and S3ForcePathStyle as false and default backup images is false",
@@ -1406,6 +1412,7 @@ func TestDPAReconciler_ValidateBackupStorageLocations(t *testing.T) {
 			},
 			want:    false,
 			wantErr: true,
+			errMsg:  "region for AWS backupstoragelocation not automatically discoverable. Please set the region in the backupstoragelocation config",
 		},
 		{
 			name: "BSL Region set for aws provider with S3ForcePathStyle expect to succeed",
@@ -1485,6 +1492,7 @@ func TestDPAReconciler_ValidateBackupStorageLocations(t *testing.T) {
 			},
 			want:    false,
 			wantErr: true,
+			errMsg:  "region for AWS backupstoragelocation not automatically discoverable. Please set the region in the backupstoragelocation config",
 		},
 	}
 	for _, tt := range tests {
@@ -1509,6 +1517,13 @@ func TestDPAReconciler_ValidateBackupStorageLocations(t *testing.T) {
 				t.Errorf("ValidateBackupStorageLocations() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
+
+			// Validate if error message is same as expected
+			if err != nil && err.Error() != tt.errMsg {
+				t.Errorf("ValidateBackupStorageLocations() error message = %v, want %v", err.Error(), tt.errMsg)
+				return
+			}
+
 			if got != tt.want {
 				t.Errorf("ValidateBackupStorageLocations() got = %v, want %v", got, tt.want)
 			}
@@ -1805,6 +1820,7 @@ func TestDPAReconciler_ensureBackupLocationHasVeleroOrCloudStorage(t *testing.T)
 		name    string
 		dpa     *oadpv1alpha1.DataProtectionApplication
 		wantErr bool
+		errMsg  string
 	}{
 		{
 			name: "one bsl configured per provider",
@@ -1858,6 +1874,7 @@ func TestDPAReconciler_ensureBackupLocationHasVeleroOrCloudStorage(t *testing.T)
 				},
 			},
 			wantErr: true,
+			errMsg:  "cannot have both backupstoragelocations and bucket provided for a single StorageLocation",
 		},
 		{
 			name: "two bsl configured per provider",
@@ -1914,11 +1931,17 @@ func TestDPAReconciler_ensureBackupLocationHasVeleroOrCloudStorage(t *testing.T)
 				Scheme: scheme,
 			}
 			for _, bsl := range tt.dpa.Spec.BackupLocations {
-				if err := r.ensureBackupLocationHasVeleroOrCloudStorage(&bsl); (err != nil) != tt.wantErr {
+				err := r.ensureBackupLocationHasVeleroOrCloudStorage(&bsl)
+				if (err != nil) != tt.wantErr {
 					t.Errorf("ensureBSLProviderMapping() error = %v, wantErr %v", err, tt.wantErr)
 				}
-			}
 
+				// Validate if the error message matches the expected message
+				if err != nil && err.Error() != tt.errMsg {
+					t.Errorf("ValidateBackupStorageLocations() error message = %v, want %v", err.Error(), tt.errMsg)
+					return
+				}
+			}
 		})
 	}
 }

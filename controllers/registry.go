@@ -270,6 +270,8 @@ func (r *DPAReconciler) getSecretNameAndKey(config map[string]string, credential
 			return secretName, secretKey, nil
 		}
 	}
+	fmt.Printf("----------> %s",secretName)
+	fmt.Printf("----------> %v",len(secretName))
 	// check if user specified the Credential Name and Key
 	if credential != nil {
 		if len(credential.Name) > 0 {
