@@ -23,6 +23,7 @@ func TestDPAReconciler_ValidateVolumeSnapshotLocation(t *testing.T) {
 		secret  *corev1.Secret
 		want    bool
 		wantErr bool
+		errMsg  string
 	}{
 		{
 			name: "test no VSLs specified",
@@ -104,6 +105,7 @@ func TestDPAReconciler_ValidateVolumeSnapshotLocation(t *testing.T) {
 			},
 			want:    false,
 			wantErr: true,
+			errMsg:  "region for AWS VSL is not configured, please ensure a region is configured",
 			secret: &corev1.Secret{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "cloud-credentials",
@@ -172,6 +174,7 @@ func TestDPAReconciler_ValidateVolumeSnapshotLocation(t *testing.T) {
 			},
 			want:    false,
 			wantErr: true,
+			errMsg:  "invalid-test is not a valid AWS config value",
 			secret: &corev1.Secret{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "cloud-credentials",
@@ -303,6 +306,7 @@ func TestDPAReconciler_ValidateVolumeSnapshotLocation(t *testing.T) {
 			},
 			want:    false,
 			wantErr: true,
+			errMsg:  "invalid-test is not a valid GCP config value",
 			secret: &corev1.Secret{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "cloud-credentials-gcp",
@@ -500,6 +504,7 @@ func TestDPAReconciler_ValidateVolumeSnapshotLocation(t *testing.T) {
 			},
 			want:    false,
 			wantErr: true,
+			errMsg:  "invalid-test is not a valid GCP config value",
 			secret: &corev1.Secret{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "cloud-credentials-azure",
@@ -531,6 +536,13 @@ func TestDPAReconciler_ValidateVolumeSnapshotLocation(t *testing.T) {
 				t.Errorf("ValidateVolumeSnapshotLocations() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
+
+			// If error is expected, compare the error message
+			if err != nil && err.Error() != tt.errMsg {
+				t.Errorf("ValidateVolumeSnapshotLocations() error message = %v, want %v", err.Error(), tt.errMsg)
+				return
+			}
+
 			if got != tt.want {
 				t.Errorf("ValidateVolumeSnapshotLocations() got %v, want %v", got, tt.want)
 			}
